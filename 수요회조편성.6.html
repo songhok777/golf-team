@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>골프 조편성 프로그램 (기록 저장 및 관리)</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            padding: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #1b5e20;
+            margin-bottom: 20px;
+        }
+        .info {
+            font-size: 0.9em;
+            color: #666;
+            background: #eef2f3;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .live-counter {
+            background: #e8f5e9;
+            border: 1px solid #a5d6a7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+        .live-counter span {
+            font-size: 1.3em;
+            color: #c62828;
+            margin: 0 3px;
+        }
+
+        .setting-section {
+            background: #f1f8e9;
+            border: 1px solid #c5e1a5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .setting-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .config-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .config-box {
+            background: #fff;
+            border: 1px solid #aeaeae;
+            padding: 6px 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.95em;
+        }
+        .config-box select {
+            padding: 2px 5px;
+            font-size: 0.95em;
+        }
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 0.85em;
+            background: #558b2f;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .member-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        @media (max-width: 480px) {
+            .member-list { grid-template-columns: repeat(2, 1fr); }
+        }
+        .member-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            user-select: none;
+        }
+        .member-item input {
+            margin-right: 8px;
+            width: 16px;
+            height: 16px;
+        }
+        .member-item.checked {
+            background: #e8f5e9;
+            border-color: #81c784;
+            font-weight: bold;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-submit { background-color: #2e7d32; color: white; }
+        .btn-submit:hover { background-color: #1b5e20; }
+        .btn-toggle { background-color: #78909c; color: white; }
+        .btn-toggle:hover { background-color: #546e7a; }
+        
+        /* 히스토리(기록) 섹션 스타일 */
+        .history-section {
+            margin-top: 25px;
+            border-top: 2px dashed #ccc;
+            padding-top: 20px;
+        }
+        .history-card {
+            background: #ffffff;
+            border: 1px solid #c8e6c9;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .history-date {
+            font-size: 0.9em;
+            color: #555;
+            font-weight: bold;
+        }
+        .btn-delete {
+            background-color: #e53935;
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            cursor: pointer;
+        }
+        .btn-delete:hover {
+            background-color: #c62828;
+        }
+        .team-box {
+            background: #f9f9f9;
+            border-left: 4px solid #2e7d32;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            border-radius: 3px;
+            font-size: 0.95em;
+        }
+        .team-name {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⛳ 골프 자동 조편성</h2>
+    
+    <div class="info">
+        1. 오늘 <strong>참석하는 회원만 체크</strong>해 주세요.<br>
+        2. 조 인원 선택 후 [랜덤 조편성 시작]을 누르면 아래에 <strong>최대 3개까지 기록이 저장</strong>됩니다.<br>
+        <span style="color: #c62828;">⚠️ 실시간 참석 인원과 조별 인원 설정 총합이 일치해야 합니다.</span>
+    </div>
+
+    <!-- 실시간 인원 카운터 -->
+    <div class="live-counter">
+        현재 체크된 참석 인원: <span id="liveAttendeeCount">16</span>명
+    </div>
+
+    <div class="btn-group">
+        <button type="button" class="btn-toggle" onclick="toggleAll()">전체 선택/해제</button>
+    </div>
+
+    <!-- 회원 리스트 -->
+    <div class="member-list" id="memberList"></div>
+
+    <!-- 조별 인원 설정 -->
+    <div class="setting-section">
+        <div class="setting-title">
+            <span>🛠️ 조별 인원 설정 (현재 설정 총합: <span id="setupTotal">16</span>명)</span>
+            <div>
+                <button type="button" class="btn-small" onclick="addTeamConfig()">+ 조 추가</button>
+                <button type="button" class="btn-small" style="background:#c62828;" onclick="removeTeamConfig()">- 조 삭제</button>
+            </div>
+        </div>
+        <div class="config-row" id="configRow"></div>
+    </div>
+
+    <div class="btn-group">
+        <button type="button" class="btn-submit" onclick="generateTeams()">랜덤 조편성 시작</button>
+    </div>
+
+    <!-- 조편성 결과 및 기록 영역 -->
+    <div class="history-section" id="historySection">
+        <h3 style="color: #1b5e20; margin-bottom: 15px;">📋 조편성 기록 (최대 3개 보관)</h3>
+        <div id="historyList"></div>
+    </div>
+</div>
+
+<script>
+    const members = [
+        "장희연", "최정민", "정혜란", "최진식", 
+        "남경훈", "명재옥", "오정애", "박진찬", 
+        "김철", "김철진", "이종학", "서효숙", 
+        "이선호", "장진하", "김기태", "김송호"
+    ];
+
+    // 저장 기록을 담는 배열 (최대 3개 유지)
+    let historyData = JSON.parse(localStorage.getItem('golf_team_history')) || [];
+
+    // 회원 목록 출력
+    const memberListDiv = document.getElementById('memberList');
+    members.forEach((name, index) => {
+        const item = document.createElement('div');
+        item.className = 'member-item checked';
+        item.innerHTML = `
+            <input type="checkbox" id="mem_${index}" checked onchange="handleCheckboxChange()">
+            <label for="mem_${index}" style="cursor:pointer; width:100%;">${name}</label>
+        `;
+        item.addEventListener('click', function(e) {
+            if(e.target.tagName !== 'INPUT' && e.target.tagName !== 'LABEL') {
+                const chk = this.querySelector('input');
+                chk.checked = !chk.checked;
+                handleCheckboxChange();
+            }
+        });
+        memberListDiv.appendChild(item);
+    });
+
+    function handleCheckboxChange() {
+        updateClasses();
+        calculateLiveAttendees();
+    }
+
+    function updateClasses() {
+        const checkboxes = document.querySelectorAll('.member-list input');
+        checkboxes.forEach(chk => {
+            if(chk.checked) chk.parentElement.classList.add('checked');
+            else chk.parentElement.classList.remove('checked');
+        });
+    }
+
+    function calculateLiveAttendees() {
+        const checkboxes = document.querySelectorAll('.member-list input');
+        let checkedCount = 0;
+        checkboxes.forEach(chk => {
+            if(chk.checked) checkedCount++;
+        });
+        document.getElementById('liveAttendeeCount').innerText = checkedCount;
+    }
+
+    let allChecked = true;
+    function toggleAll() {
+        allChecked = !allChecked;
+        const checkboxes = document.querySelectorAll('.member-list input');
+        checkboxes.forEach(chk => {
+            chk.checked = allChecked;
+        });
+        handleCheckboxChange();
+    }
+
+    // 조 설정
+    let teamCount = 0;
+    const configRow = document.getElementById('configRow');
+
+    function addTeamConfig(initialValue = 4) {
+        teamCount++;
+        const div = document.createElement('div');
+        div.className = 'config-box';
+        div.id = `config_box_${teamCount}`;
+        div.innerHTML = `
+            <span>${teamCount}조:</span>
+            <select class="team-size-select" onchange="calculateSetupTotal()">
+                <option value="0" ${initialValue === 0 ? 'selected' : ''}>0명</option>
+                <option value="2" ${initialValue === 2 ? 'selected' : ''}>2명</option>
+                <option value="3" ${initialValue === 3 ? 'selected' : ''}>3명</option>
+                <option value="4" ${initialValue === 4 ? 'selected' : ''}>4명</option>
+            </select>
+        `;
+        configRow.appendChild(div);
+        calculateSetupTotal();
+    }
+
+    function removeTeamConfig() {
+        if (teamCount <= 1) return;
+        const lastBox = document.getElementById(`config_box_${teamCount}`);
+        configRow.removeChild(lastBox);
+        teamCount--;
+        calculateSetupTotal();
+    }
+
+    function calculateSetupTotal() {
+        const selects = document.querySelectorAll('.team-size-select');
+        let sum = 0;
+        selects.forEach(sel => sum += parseInt(sel.value));
+        document.getElementById('setupTotal').innerText = sum;
+    }
+
+    // 초기화 설정 (4명씩 4개조)
+    addTeamConfig(4);
+    addTeamConfig(4);
+    addTeamConfig(4);
+    addTeamConfig(4);
+    calculateLiveAttendees();
+    renderHistory(); // 저장되어 있던 히스토리 화면 출력
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // 현재 날짜 및 시간 포맷 생성 (예: 2026. 03. 25 14:30)
+    function getFormattedDate() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const date = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        return `${year}. ${month}. ${date} ${hours}:${minutes}`;
+    }
+
+    // 조편성 실행 및 저장
+    function generateTeams() {
+        const attendees = [];
+        members.forEach((name, index) => {
+            if(document.getElementById(`mem_${index}`).checked) {
+                attendees.push(name);
+            }
+        });
+
+        const totalAttendees = attendees.length;
+        if(totalAttendees === 0) {
+            alert("참석자를 선택해 주세요.");
+            return;
+        }
+
+        const selects = document.querySelectorAll('.team-size-select');
+        let targetTotal = 0;
+        let teamSizes = [];
+        
+        selects.forEach(sel => {
+            const val = parseInt(sel.value);
+            targetTotal += val;
+            teamSizes.push(val);
+        });
+
+        if (totalAttendees !== targetTotal) {
+            alert(`인원이 맞지 않습니다!\n\n• 현재 체크된 참석자: ${totalAttendees}명\n• 설정된 조 인원 합계: ${targetTotal}명\n\n숫자를 맞춰주세요.`);
+            return;
+        }
+
+        shuffle(attendees);
+
+        let resultTeams = [];
+        let currentIdx = 0;
+        let displayTeamNum = 1;
+
+        teamSizes.forEach((size) => {
+            if (size === 0) return;
+            const teamMembers = attendees.slice(currentIdx, currentIdx + size);
+            currentIdx += size;
+
+            resultTeams.push({
+                teamNum: displayTeamNum,
+                size: size,
+                members: teamMembers.join(', ')
+            });
+            displayTeamNum++;
+        });
+
+        // 새 기록 객체 작성
+        const newRecord = {
+            id: Date.now(),
+            dateStr: getFormattedDate(),
+            totalCount: totalAttendees,
+            teams: resultTeams
+        };
+
+        // 최신 기록을 맨 앞에 추가하고, 최대 3개까지만 유지
+        historyData.unshift(newRecord);
+        if (historyData.length > 3) {
+            historyData.pop();
+        }
+
+        // 로컬 스토리지 저장 및 화면 갱신
+        localStorage.setItem('golf_team_history', JSON.stringify(historyData));
+        renderHistory();
+    }
+
+    // 특정 기록 삭제
+    function deleteHistory(id) {
+        if (confirm("이 조편성 기록을 삭제하시겠습니까?")) {
+            historyData = historyData.filter(item => item.id !== id);
+            localStorage.setItem('golf_team_history', JSON.stringify(historyData));
+            renderHistory();
+        }
+    }
+
+    // 히스토리 화면 렌더링
+    function renderHistory() {
+        const historyListDiv = document.getElementById('historyList');
+        historyListDiv.innerHTML = '';
+
+        if (historyData.length === 0) {
+            historyListDiv.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">저장된 조편성 기록이 없습니다.</div>`;
+            return;
+        }
+
+        historyData.forEach((record, index) => {
+            const card = document.createElement('div');
+            card.className = 'history-card';
+            
+            let teamsHtml = '';
+            record.teams.forEach(t => {
+                teamsHtml += `
+                    <div class="team-box">
+                        <span class="team-name">${t.teamNum}조 (${t.size}인):</span> ${t.members}
+                    </div>
+                `;
+            });
+
+            card.innerHTML = `
+                <div class="history-header">
+                    <span class="history-date">📅 ${record.dateStr} (${record.totalCount}명 참석)</span>
+                    <button type="button" class="btn-delete" onclick="deleteHistory(${record.id})">삭제</button>
+                </div>
+                <div>${teamsHtml}</div>
+            `;
+
+            historyListDiv.appendChild(card);
+        });
+    }
+</script>
+
+</body>
+</html>
